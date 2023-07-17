@@ -1,4 +1,4 @@
-var origBoard;
+var origBoard; 
 const huPlayer = 'O';
 const aiPlayer = 'X';
 const winCombos = [ // winning combinations
@@ -20,29 +20,21 @@ startGame();
 function startGame() {
 	document.querySelector(".endgame").style.display = "none";
 	origBoard = Array.from(Array(9).keys()); 
-	//[0:0 ,1:1 , 2:2 , .... ,8:8]
-	// create an array 0 to 8 with key 0 to 8
-
 	for (var i = 0; i < cells.length; i++) {
 		cells[i].innerText = '';
 		cells[i].style.removeProperty('background-color');
 		cells[i].addEventListener('click', turnClick, false);
-	}
-	//remove all the elements from board each time restart
-	// make all the cells 
+     }
 }
 
 function turnClick(square) {
 	if (typeof origBoard[square.target.id] == 'number') {
-		//intially it will be 0,1,2,3...
-		// square.target.id gives as the target value in that cell id
-		// if they enter 'x' or 'o' then it will not number type
-
 		turn(square.target.id, huPlayer)
+		// human player to make the turn
 		if (!checkWin(origBoard, huPlayer) && !checkTie()) turn(bestSpot(), aiPlayer);
 	}
 }
-
+ 
 function turn(squareId, player) {
 	origBoard[squareId] = player;
 	document.getElementById(squareId).innerText = player;
@@ -53,14 +45,6 @@ function turn(squareId, player) {
 function checkWin(board, player) {
 	let plays = board.reduce((a, e, i) =>
 		(e === player) ? a.concat(i) : a, []);
-
-		// reduce method
-		//(a , e , i) 
-		// a = accumulator we gonna return that
-		// e = is the value of each cells in board
-		// i = is the index
-		// [] = initializing the accumulator array
-		// get all index the have 'O' [0,4,8]...
 
 	let gameWon = null;
 	for (let [index, win] of winCombos.entries()) {
@@ -82,6 +66,7 @@ function gameOver(gameWon) {
 	}
 	for (var i = 0; i < cells.length; i++) {
 		cells[i].removeEventListener('click', turnClick, false);
+		// after that we cannot click anywhere in the board
 	}
 	declareWinner(gameWon.player == huPlayer ? "You win!" : "You lose.");
 }
@@ -112,56 +97,65 @@ function checkTie() {
 		declareWinner("Tie Game!")
 		return true;
 	}
-	return false;
+	return false; 
 }
 
 function minimax(newBoard, player) {
 	var availSpots = emptySquares();
 
 	if (checkWin(newBoard, huPlayer)) {
-		return {score: -10};
+		return {score: -1};
 	} else if (checkWin(newBoard, aiPlayer)) {
-		return {score: 10};
+		return {score: 1};
 	} else if (availSpots.length === 0) {
 		return {score: 0};
 	}
-	var moves = [];
+	var moves_object = [];
+	var prune = 0;
 	for (var i = 0; i < availSpots.length; i++) {
 		var move = {};
-		move.index = newBoard[availSpots[i]];
+		move.index = availSpots[i];
 		newBoard[availSpots[i]] = player;
 
 		if (player == aiPlayer) {
 			var result = minimax(newBoard, huPlayer);
 			move.score = result.score;
+			if(result.score == 1){
+				prune = 1;
+			}
 		} else {
 			var result = minimax(newBoard, aiPlayer);
 			move.score = result.score;
+			if(result.score == -1){
+			prune = 1;
+			}
 		}
 
 		newBoard[availSpots[i]] = move.index;
 
-		moves.push(move);
+	 moves_object.push(move);
+		if(prune === 1)
+		break;
 	}
-
+ 
 	var bestMove;
 	if(player === aiPlayer) {
 		var bestScore = -10000;
-		for(var i = 0; i < moves.length; i++) {
-			if (moves[i].score > bestScore) {
-				bestScore = moves[i].score;
+		for(var i = 0; i < moves_object.length; i++) {
+			if  (moves_object[i].score > bestScore) {
+				bestScore = moves_object[i].score;
 				bestMove = i;
 			}
 		}
 	} else {
 		var bestScore = 10000;
-		for(var i = 0; i < moves.length; i++) {
-			if (moves[i].score < bestScore) {
-				bestScore = moves[i].score;
+		for(var i = 0; i < moves_object.length; i++) {
+			if (moves_object[i].score < bestScore) {
+				bestScore = moves_object[i].score;
 				bestMove = i;
 			}
 		}
 	}
 
-	return moves[bestMove];
+	return moves_object[bestMove];
 }
